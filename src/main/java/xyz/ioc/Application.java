@@ -23,7 +23,17 @@ public class Application {
             Path path = Paths.get(dir + SAMPLE_DIR + "room.jpg");
             BufferedImage image = ImageIO.read(path.toFile());
 
-            Integer[][] kernel = getKernel();
+            int size = Integer.parseInt(args[0]);
+            Integer[][] kernel = getDynamicKernel(size);
+
+            for(int x = 0; x < kernel.length; x++) {
+                for (int y = 0; y < kernel[x].length; y++) {
+                    System.out.print(kernel[x][y] + ":");
+                }
+                System.out.println("");
+            }
+
+
             int total = getTotal(kernel);
 
             List<Pixel> pixels = new ArrayList<Pixel>();
@@ -31,7 +41,7 @@ public class Application {
                 for (int y = 0; y < image.getHeight(); y++) {
                     int rgb = image.getRGB(x, y);
 
-                    List<List<Pixel>> grid = getGrid(image, x ,y);
+                    List<List<Pixel>> grid = getDynamicGrid(x ,y, size, image);
                     List<Pixel> product = new ArrayList<Pixel>();
                     for(int n = 0; n < grid.size(); n++){
                         for(int m = 0; m < grid.get(n).size(); m++){
@@ -71,7 +81,7 @@ public class Application {
                     int avgg = Math.round(sumg / total);
                     int avgb = Math.round(sumb / total);
 
-                    System.out.println("avgs: " + avgr + ", " + avgg + ", " + avgb);
+//                    System.out.println("avgs: " + avgr + ", " + avgg + ", " + avgb);
 
                     Pixel pixel = new Pixel.Builder()
                             .atX(x)
@@ -96,14 +106,13 @@ public class Application {
 
             for (int n = 0; n < pixels.size(); n++) {
                 Pixel xspace = pixels.get(n);
-                System.out.println(xspace.getRed() + "," + xspace.getGreen() + "," + xspace.getBlue());
                 Color c = new Color(xspace.getRed(), xspace.getGreen(), xspace.getBlue());
                 result.setRGB(xspace.getX(), xspace.getY(), c.getRGB());
             }
 
             System.out.println("processing: " + pixels.size());
 
-            File tempFile = new File(dir + SAMPLE_DIR + "output" + File.separatorChar + "final_product.png");
+            File tempFile = new File(dir + SAMPLE_DIR + "output" + File.separatorChar + "final.png");
             Path filepath = tempFile.toPath();
             ByteArrayOutputStream baos = new ByteArrayOutputStream();
             ImageIO.write( result, "png", baos );
@@ -117,12 +126,125 @@ public class Application {
 
             baos.close();
 
-            System.out.println("image complete...");
+            System.out.println("image complete: " + filepath);
 
         }catch(Exception e){
             e.printStackTrace();
             ///////////////////////////////////////////////////////////////////////////////////
         }
+    }
+
+    private static List<List<Pixel>> getDynamicGrid(int x, int y, int size, BufferedImage image){
+        List<List<Pixel>> grid = new ArrayList<List<Pixel>>();
+        int bottom = -(int)Math.round(size);
+        for(int n = 0; n < size; n++) {
+            List<Pixel> pixels = new ArrayList<Pixel>();
+            for (int q = 0; q < size; q++){
+                pixels.add(getPixel(image, x + (bottom), y + (bottom)));
+                bottom++;
+            }
+            grid.add(pixels);
+            bottom = -(int)Math.round(size);
+        }
+        return grid;
+    }
+
+    /**
+     * 1x1
+     * 2
+     *
+     * 2x2
+     * 1 2
+     * 2 1
+     *
+     * 3x3
+     * 1 2 1
+     * 2 4 2
+     * 1 2 1
+     *
+     * 4x4
+     * 1 2 2 1
+     * 2 4 4 2
+     * 2 4 4 2
+     * 1 2 2 1
+     *
+     * 5x5
+     * 1 2 4 2 1
+     * 2 4 8 4 2
+     * 4 8 16 8 4
+     * 2 4 8 4 2
+     * 1 2 4 2 1
+     */
+
+    private static Integer[][] getDynamicKernel(int size){
+
+        int integralx = 0;
+        int integraly = 0;
+
+        Integer[][] kernel = new Integer[size][size];
+
+        for(int x = 0; x < size; x++){
+
+            for(int y = 0; y < size; y++){
+                if(size == 1){
+                    kernel[x][y] = 2;
+                }else if(size == 2) {
+
+                    if(x == 0 && y == 0)
+                        kernel[x][y] = 1;
+
+                    if(x == 0 && y == 1 )
+                        kernel[x][y] = 2;
+
+                    if(x == 1 && y == 0)
+                        kernel[x][y] = 2;
+
+                    if(x == 1 && y == 1)
+                        kernel[x][y] = 1;
+
+                }else if(size > 2){
+
+                    /**
+                     * 5x5
+                     * 1 2 4 2 1
+                     * 2 4 8 4 2
+                     * 4 8 16 8 4
+                     * 2 4 8 4 2
+                     * 1 2 4 2 1
+                     */
+
+                    kernel[x][y] = y + integraly + (integralx * 2);
+
+                    if((x == 0 && y == 0) ||
+                            (x == size -1 && y == size -1) ||
+                            (x == 0 && y == size -1) ||
+                            (x == size -1 && y == 0))
+                        kernel[x][y] = 1;
+
+
+                    if(y < size / 2){
+                        integraly += 2;
+                    }
+                    if(y >= size /2){
+                        integraly -= 2;
+                    }
+                }
+
+            }
+
+            integraly = 0;
+
+            if(x < size / 2){
+                integralx += 2;
+            }
+
+            if(x >= size /2){
+                integralx = integralx - 2;
+            }
+
+//            System.out.println("");
+        }
+        return kernel;
     }
 
     private static int getTotal(Integer[][] kernel){
@@ -134,82 +256,7 @@ public class Application {
         return total;
     }
 
-
-    private static List<List<Pixel>> getGrid(BufferedImage image, int x, int y){
-        List<List<Pixel>> grid = new ArrayList<List<Pixel>>();
-        List<Pixel> yt = new ArrayList<Pixel>();
-        yt.add(getColorNode(image, x - 2, y -2));
-        yt.add(getColorNode(image, x -1 , y -2));
-        yt.add(getColorNode(image, x , y -2));
-        yt.add(getColorNode(image, x + 1, y -2));
-        yt.add(getColorNode(image, x + 2, y -2));
-
-
-        List<Pixel> yt2 = new ArrayList<Pixel>();
-        yt2.add(getColorNode(image, x - 2, y -1));
-        yt2.add(getColorNode(image, x -1 , y -1));
-        yt2.add(getColorNode(image, x , y -1));
-        yt2.add(getColorNode(image, x + 1, y -1));
-        yt2.add(getColorNode(image, x + 2, y -1));
-
-
-        List<Pixel> ym = new ArrayList<Pixel>();
-        ym.add(getColorNode(image, x - 2, y));
-        ym.add(getColorNode(image, x -1 , y));
-        ym.add(getColorNode(image, x , y));
-        ym.add(getColorNode(image, x + 1, y));
-        ym.add(getColorNode(image, x + 2, y));
-
-
-        List<Pixel> yb2 = new ArrayList<Pixel>();
-        yb2.add(getColorNode(image, x - 2, y + 1));
-        yb2.add(getColorNode(image, x -1 , y + 1));
-        yb2.add(getColorNode(image, x , y + 1));
-        yb2.add(getColorNode(image, x + 1, y + 1));
-        yb2.add(getColorNode(image, x + 2, y + 1));
-
-
-        List<Pixel> yb = new ArrayList<Pixel>();
-        yb.add(getColorNode(image, x - 2, y + 2));
-        yb.add(getColorNode(image, x -1 , y + 2));
-        yb.add(getColorNode(image, x , y + 2));
-        yb.add(getColorNode(image, x + 1, y + 2));
-        yb.add(getColorNode(image, x + 2, y + 2));
-
-        grid.add(yt);
-        grid.add(yt2);
-        grid.add(ym);
-        grid.add(yb2);
-        grid.add(yb);
-
-        return grid;
-    }
-
-    private static List<List<Pixel>> getGridOld(BufferedImage image, int x, int y){
-        List<List<Pixel>> grid = new ArrayList<List<Pixel>>();
-        List<Pixel> yt = new ArrayList<Pixel>();
-        yt.add(getColorNode(image, x - 1, y -1));
-        yt.add(getColorNode(image, x, y -1));
-        yt.add(getColorNode(image, x + 1, y -1));
-
-        List<Pixel> ym = new ArrayList<Pixel>();
-        ym.add(getColorNode(image, x - 1, y));
-        ym.add(getColorNode(image, x, y));
-        ym.add(getColorNode(image, x + 1, y));
-
-        List<Pixel> yb = new ArrayList<Pixel>();
-        yb.add(getColorNode(image, x - 1, y +1));
-        yb.add(getColorNode(image, x, y +1));
-        yb.add(getColorNode(image, x + 1, y +1));
-
-        grid.add(yt);
-        grid.add(ym);
-        grid.add(yb);
-
-        return grid;
-    }
-
-    private static Pixel getColorNode(BufferedImage image, int x, int y){
+    private static Pixel getPixel(BufferedImage image, int x, int y){
         Pixel pixel = new Pixel.Builder()
                 .atX(x)
                 .atY(y)
@@ -218,69 +265,9 @@ public class Application {
             int rgb = image.getRGB(x, y);
             pixel.setRgb(rgb);
         }catch (Exception e){
-            System.out.println("not valued it");
             //////////////////////////////////////////////
         }
         return pixel;
-    }
-
-    /**
-     * 1 2 3 2 1
-     * 2 3 4 3 2
-     * 3 4 8 4 3
-     * 2 3 4 3 2
-     * 1 2 3 2 1
-     */
-    private static Integer[][] getKernel(){
-        Integer[][] kernel = new Integer[5][5];
-        kernel[0][0] = 1;
-        kernel[1][0] = 2;
-        kernel[2][0] = 3;
-        kernel[3][0] = 2;
-        kernel[4][0] = 1;
-
-        kernel[0][1] = 2;
-        kernel[1][1] = 3;
-        kernel[2][1] = 4;
-        kernel[3][1] = 3;
-        kernel[4][1] = 2;
-
-        kernel[0][2] = 3;
-        kernel[1][2] = 4;
-        kernel[2][2] = 8;
-        kernel[3][2] = 4;
-        kernel[4][2] = 3;
-
-        kernel[0][3] = 2;
-        kernel[1][3] = 3;
-        kernel[2][3] = 4;
-        kernel[3][3] = 3;
-        kernel[4][3] = 2;
-
-        kernel[0][4] = 1;
-        kernel[1][4] = 2;
-        kernel[2][4] = 3;
-        kernel[3][4] = 2;
-        kernel[4][4] = 1;
-
-        return kernel;
-    }
-
-    private static Integer[][] getKernelOne(){
-        Integer[][] kernel = new Integer[3][3];
-        kernel[0][0] = 1;
-        kernel[1][0] = 2;
-        kernel[2][0] = 1;
-
-        kernel[0][1] = 2;
-        kernel[1][1] = 4;
-        kernel[2][1] = 2;
-
-        kernel[0][2] = 1;
-        kernel[1][2] = 2;
-        kernel[2][2] = 1;
-
-        return kernel;
     }
 }
 
