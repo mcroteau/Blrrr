@@ -4,109 +4,27 @@
 	<groupId>xyz.ioc</groupId>
 	<artifactId>blrrr</artifactId>
 	<packaging>jar</packaging>
-	<version>0.1-SNAPSHOT</version>
+	<version>0.1</version>
 	<name>blrrr</name>
 	<url>http://maven.apache.org</url>
 
 	<properties>
-		<junit.version>3.8.1</junit.version>
-        <log4j.version>1.2.17</log4j.version>
-        <slf4j.version>1.7.25</slf4j.version>
-		<sitemesh.version>2.4.2</sitemesh.version>
-		<commons.io.version>2.4</commons.io.version>
-		<commons.fileupload.version>1.3.3</commons.fileupload.version>
-		<commons.validator.version>1.5.1</commons.validator.version>
-		<commons.lang.version>3.6</commons.lang.version>
 	    <maven.compiler.source>1.8</maven.compiler.source>
 	    <maven.compiler.target>1.8</maven.compiler.target>
 	</properties>
 
-	<repositories>
-		<repository>
-			<id>project-repo</id>
-			<url>file://${project.basedir}/src/main/resources/repo</url>
-		</repository>
-	</repositories>
 
-	<dependencies>
-
-		<dependency>
-			<groupId>commons-io</groupId>
-			<artifactId>commons-io</artifactId>
-			<version>${commons.io.version}</version>
-		</dependency>
-
-		<dependency>
-		    <groupId>commons-validator</groupId>
-		    <artifactId>commons-validator</artifactId>
-		    <version>${commons.validator.version}</version>
-		</dependency>
-
-		<dependency>
-		    <groupId>org.apache.commons</groupId>
-		    <artifactId>commons-lang3</artifactId>
-		    <version>${commons.lang.version}</version>
-		</dependency>
-
-	</dependencies>
-	
-	
     <build>
 
-        <defaultGoal>install</defaultGoal>
+        <defaultGoal>package</defaultGoal>
 
         <directory>target</directory>
         <outputDirectory>target/classes</outputDirectory>
 
         <finalName>${project.artifactId}-${project.version}</finalName>
-        <testOutputDirectory>target/test-classes</testOutputDirectory>
         <sourceDirectory>src/main/java</sourceDirectory>
-        <scriptSourceDirectory>src/main/scripts</scriptSourceDirectory>
-        <testSourceDirectory>src/test/java</testSourceDirectory>
-
-        <resources>
-            <resource>
-                <directory>samples</directory>
-                <includes>
-                    <include>log4j.properties</include>
-                    <include>application.properties</include>
-                </includes>
-            </resource>
-            <resource>
-                <directory>samples/samples/sql</directory>
-                <includes>
-                    <include>create-db.sql</include>
-                    <include>insert-data.sql</include>
-                </includes>
-            </resource>
-        </resources>
-
 
         <plugins>
-
-			<plugin>
-                <artifactId>maven-assembly-plugin</artifactId>
-                    <configuration>
-                <archive>
-                    <manifest>
-                        <mainClass>xyz.ioc.Application</mainClass>
-                    </manifest>
-                </archive>
-                <descriptorRefs>
-                    <descriptorRef>jar-with-dependencies</descriptorRef>
-                </descriptorRefs>
-              </configuration>
-                <executions>
-                    <execution>
-                        <id>make-assembly</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                    </execution>
-                </executions>
-            </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
@@ -121,22 +39,6 @@
                   </archive>
                 </configuration>
             </plugin>
-
-			<plugin>
-        	    <groupId>org.eclipse.jetty</groupId>
-        	    <artifactId>jetty-maven-plugin</artifactId>
-        	    <version>9.4.20.v20190813</version>
-
-        	    <configuration>
-        	        <!--<scanIntervalSeconds>3</scanIntervalSeconds>-->
-        	        <webApp>
-        	            <contextPath>/o</contextPath>
-        	        </webApp>
-        	        <httpConnector>
-        	            <port>9073</port>
-        	        </httpConnector>
-        	    </configuration>
-        	</plugin>
         </plugins>
     </build>
   	
